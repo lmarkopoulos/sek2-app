@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Browser } from '@capacitor/browser';
 import {
   sekFees,
+  sekOrders,
   sekUserStatus,
   sekCheckout,
   fetchVotings,
@@ -16,6 +18,7 @@ const Tabs: React.FC<{ tab: string; setTab: (t: string) => void }> = ({ tab, set
     <span className={`tab ${tab === 'account' ? 'active' : ''}`} onClick={() => setTab('account')}>Account</span>
     <span className={`tab ${tab === 'votings' ? 'active' : ''}`} onClick={() => setTab('votings')}>Votings</span>
     <span className={`tab ${tab === 'payment' ? 'active' : ''}`} onClick={() => setTab('payment')}>Payment</span>
+	<span className={`tab ${tab==='orders'?'active':''}`} onClick={()=>setTab('orders')}>Orders</span>
     <span className={`tab ${tab === 'news' ? 'active' : ''}`} onClick={() => setTab('news')}>Private news</span>
   </div>
 );
@@ -43,11 +46,19 @@ const Payment: React.FC<{ token: string | null }> = ({ token }) => {
     sekFees().then(setFees).finally(() => setLoading(false));
   }, []);
 
-  function pay(id: number) {
+  async function pay(id: number) {
     if (!token) return;
-    sekCheckout(token, id).then(res => {
-      window.open(res.checkout_url, '_blank');
-    });
+    try {
+      // backend should return { checkout_url }
+      const res = await sekCheckout(token, id);
+      await Browser.open({
+        url: res.checkout_url,
+        presentationStyle: 'fullscreen',
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Αποτυχία ανοίγματος πληρωμής');
+    }
   }
 
   return (
@@ -57,10 +68,14 @@ const Payment: React.FC<{ token: string | null }> = ({ token }) => {
         <div>Φόρτωση...</div>
       ) : (
         <ul className="clean">
-          {fees.map(fee => (
+          {fees.map((fee) => (
             <li key={fee.id} style={{ marginBottom: 8 }}>
               <b>{fee.name}</b> — {fee.price}€
-              <button className="btn btn-outline" style={{ marginLeft: 8 }} onClick={() => pay(fee.id)}>
+              <button
+                className="btn btn-outline"
+                style={{ marginLeft: 8 }}
+                onClick={() => pay(fee.id)}
+              >
                 Πληρωμή
               </button>
             </li>
@@ -70,6 +85,7 @@ const Payment: React.FC<{ token: string | null }> = ({ token }) => {
     </div>
   );
 };
+
 
 /* ---------------- Private News placeholder ---------------- */
 const PrivateNews: React.FC = () => (
@@ -228,9 +244,58 @@ const Dashboard: React.FC = () => {
       {tab === 'account' && <Account status={status} />}
       {tab === 'votings' && <Votings status={status} token={token} />}
       {tab === 'payment' && <Payment token={token} />}
+	  {tab === 'orders' && <Orders token={token} />}
       {tab === 'news' && <PrivateNews />}
     </div>
   );
 };
+/* ---------------- Orders---------------- */
+const Orders: React.FC<{ token: string | null }> = ({ token }) => {
+  const [orders, setOrders] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!token) { setOrders([]); setLoading(false); return; }
+      try {
+        const data = await sekOrders(token);
+        setOrders(data || []);
+      } catch (e: any) {
+        setErr(e?.response?.data?.message || 'Αποτυχία φόρτωσης παραγγελιών');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token]);
+
+  return (
+    <div className="card">
+      <h3>Οι παραγγελίες μου</h3>
+      {loading ? <div>Φόρτωση…</div> :
+        err ? <div style={{ color: 'red' }}>{err}</div> :
+        (!orders || orders.length === 0) ? <div className="muted">Δεν υπάρχουν παραγγελίες.</div> :
+        <ul className="clean">
+          {orders.map((o) => (
+            <li key={o.id} className="card" style={{ marginBottom: 10 }}>
+              <div className="spread">
+                <div><b>#{o.number}</b> — {o.status}</div>
+                <div><b>{o.total}</b> {o.currency}</div>
+              </div>
+              <div className="muted">{o.date_created ? new Date(o.date_created * 1000).toLocaleString() : ''}</div>
+              <div className="muted">Πληρωμή: {o.payment_method || '-'}</div>
+              <ul>
+                {o.items.map((it: any, idx: number) => (
+                  <li key={idx}>{it.quantity} × {it.name} — {it.total} {o.currency}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      }
+    </div>
+  );
+};
+
 
 export default Dashboard;

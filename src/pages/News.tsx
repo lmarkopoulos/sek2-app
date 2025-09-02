@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchCategoryBySlug, fetchPostsByCategoryId } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
 
 type WPPost = {
   id: number;
@@ -13,6 +15,7 @@ const News: React.FC = () => {
   const [posts, setPosts] = useState<WPPost[]>([]);
   const [loading, setLoading] = useState(true);
   const slug = process.env.REACT_APP_NEWS_CATEGORY_SLUG || 'private-news';
+  const nav = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -38,14 +41,10 @@ const News: React.FC = () => {
               className="muted"
               dangerouslySetInnerHTML={{ __html: post.excerpt.rendered }}
             />
-            <a
-              className="btn btn-outline"
-              href={post.link}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Άνοιγμα
-            </a>
+            
+<button className="btn btn-outline" onClick={() => nav(`/post/${post.id}`)}>
+  Άνοιγμα
+</button>
           </article>
         ))}
       </div>

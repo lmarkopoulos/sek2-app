@@ -20,6 +20,16 @@ h2 {
   text-align: center;
   color: #00612e;
 }
+.news-page article.card h2 {
+  color: #00612e;
+  text-align: center;
+  margin-bottom: 0.5em;
+}
+
+.news-page article.card .muted {
+  font-size: 0.9em;
+  margin-bottom: 1em;
+}
 
 @media (prefers-color-scheme: dark) {
   :root {
