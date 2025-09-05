@@ -5,6 +5,9 @@ const config: CapacitorConfig = {
   appName: 'sek2-app',
   webDir: 'build',
   bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https',
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,
@@ -13,10 +16,15 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
       splashFullScreen: true,
-      splashImmersive: true
-    }
-  }
+      splashImmersive: true,
+    },
+    App: {
+      // 👇 Register custom deep link scheme
+      urlSchemes: ['sek2app'],
+    },
+  },
 };
 
 export default config;
+
 

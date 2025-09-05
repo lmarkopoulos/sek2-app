@@ -1,19 +1,37 @@
 import axios from 'axios';
-
 // === Base URLs ===
-const API_BASE = process.env.REACT_APP_API_BASE || 'https://students.kastoria.teiwm.gr';
-const SEK_BASE = process.env.REACT_APP_SEK_API_BASE || `${API_BASE}/wp-json/sek/v1`;
-const JWT_LOGIN = process.env.REACT_APP_JWT_LOGIN_PATH || '/wp-json/jwt-auth/v1/token';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://students.kastoria.teiwm.gr/wp-json';
+const SEK_BASE = process.env.REACT_APP_SEK_API_BASE || `${API_BASE}/sek/v1`;
+const JWT_LOGIN = '/wp-json/jwt-auth/v1/token';
+
 
 // === Axios client ===
 export const api = axios.create({
   baseURL: API_BASE,
   withCredentials: false,
 });
+// Attach JWT automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('sek_jwt');
+  if (token) {
+    if ((config.headers as any)?.set) {
+      (config.headers as any).set('Authorization', `Bearer ${token}`);
+    } else {
+      (config.headers as any) = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
+  }
+  return config;
+});
+
 
 // === Auth ===
 // Login: returns {token, user_email, ...}
-export async function login(username: string, password: string) {
+export async function login(identity: string, password: string) {
+	// identity can be email or username, but the key MUST be named "username"
+  const username = identity.trim();
   const { data } = await api.post(JWT_LOGIN, { username, password });
   return data;
 }
@@ -75,6 +93,28 @@ export async function sekCheckout(token: string, productId: number) {
   );
   return data; // { checkout_url: "..." }
 }
+
+export async function sekCartLink(
+  token: string,
+  productId: number,
+  qty: number = 1
+): Promise<{ cart_url: string }> {
+  const res = await api.post(`${SEK_BASE}/cart-link`, { product_id: productId, qty }, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  const data = res.data;
+
+  if (!data?.cart_url) {
+    throw new Error('Server did not return cart_url');
+  }
+console.log('Server response from cart-link:', data)
+  return { cart_url: data.cart_url };
+}
+
+
+
+
 
 // Παραγγελίες του χρήστη
 export async function sekOrders(token: string) {

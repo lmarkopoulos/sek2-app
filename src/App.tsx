@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, ReactElement } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -11,22 +11,35 @@ import Post from './pages/Post';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 
-function PrivateRoute({ children }: { children: React.ReactElement }) {
+/* ---------------- Private route ---------------- */
+function PrivateRoute({ children }: { children: ReactElement }) {
   const { token } = useAuth();
   if (!token) return <Navigate to="/login" replace />;
   return children;
 }
 
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="app">
-    <Header />
-    <main className="container">{children}</main>
-    <Footer />
-  </div>
-);
+/* ---------------- Layout ---------------- */
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [tab, setTab] = useState<string>('home');
 
+  return (
+    <div className="app">
+      {/* Header always shown */}
+      <Header setTab={setTab} />
+
+      <main className="container">
+        {React.isValidElement(children) && children.type === Dashboard
+          ? React.cloneElement(children as ReactElement<{ tab: string; setTab: (t: string) => void }>, { tab, setTab })
+          : children}
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+/* ---------------- Root ---------------- */
 const Root: React.FC = () => {
-  // Close in-app browser when checkout redirects back to your site
   useEffect(() => {
     const sub = CapApp.addListener('appUrlOpen', async (data) => {
       try {
@@ -37,20 +50,57 @@ const Root: React.FC = () => {
         /* noop */
       }
     });
-    return () => { sub.then(s => s.remove()); };
+    return () => {
+      sub.then((s) => s.remove());
+    };
   }, []);
 
   return (
     <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<News />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard/*" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/post/:id" element={<Post />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <News />
+            </Layout>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <Layout>
+              <Login />
+            </Layout>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <Layout>
+              <Register />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dashboard/*"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/post/:id"
+          element={
+            <Layout>
+              <Post />
+            </Layout>
+          }
+        />
+      </Routes>
     </AuthProvider>
   );
 };

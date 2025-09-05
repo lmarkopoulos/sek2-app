@@ -29,4 +29,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <Ctx.Provider value={{ token, login, logout }}>{children}</Ctx.Provider>;
 };
+
 export function useAuth() { return useContext(Ctx); }
