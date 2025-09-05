@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "959363551090",
+    "project_id": "sek2app",
+    "storage_bucket": "sek2app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959363551090:android:c65d92e3fb42fb7c5257eb",
+        "android_client_info": {
+          "package_name": "gr.sek2.unionapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgoXDqPREpeQIc-gPpHF_RaUMETdhFekQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:959363551090:android:a513ccb9e23c45505257eb",
+        "android_client_info": {
+          "package_name": "gr.uowm.sek2app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgoXDqPREpeQIc-gPpHF_RaUMETdhFekQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

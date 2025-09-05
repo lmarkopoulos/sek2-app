@@ -2,7 +2,7 @@ import { App } from '@capacitor/app';
 import React, { useEffect, useState } from 'react';
 import { Browser } from '@capacitor/browser';
 import { useLocation } from 'react-router-dom';
-import News from './News';   
+import News from './News';
 
 import {
   sekFees,
@@ -130,7 +130,6 @@ const Votings: React.FC<{ status: any; token: string | null }> = ({ status, toke
 
   useEffect(() => {
     setLoading(true);
-    // fetch open votings
     import("../services/api").then(({ fetchVotings }) => {
       fetchVotings("open")
         .then(setList)
@@ -188,7 +187,6 @@ const Votings: React.FC<{ status: any; token: string | null }> = ({ status, toke
         </ul>
       )}
 
-      {/* Voting details */}
       {selected && (
         <div
           className="modal-backdrop"
@@ -266,29 +264,32 @@ const Votings: React.FC<{ status: any; token: string | null }> = ({ status, toke
   );
 };
 
-
 /* ---------------- Dashboard ---------------- */
 interface DashboardProps {
-  tab?: string;                  // ✅ now optional
-  setTab?: (t: string) => void;  // ✅ now optional
+  tab?: string;
+  setTab?: (t: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ tab = 'home', setTab }) => {
   const { token } = useAuth();
   const [status, setStatus] = useState<any>(null);
   const location = useLocation();
+  const [activeTab, setActiveTab] = useState(tab);
 
-  // ✅ If navigation passed a tab, override
+  // Sync tab from props
   useEffect(() => {
-    if (location.state?.tab && setTab) {
-      setTab(location.state.tab);
+    setActiveTab(tab);
+  }, [tab]);
+
+  // Override tab if navigation state provides one (push notification)
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+      if (setTab) setTab(location.state.tab);
     }
   }, [location.state, setTab]);
 
-  // safe fallback if setTab not passed
-  const safeSetTab = setTab || (() => {});
-
-  useCheckoutReturn(safeSetTab);
+  useCheckoutReturn(setTab || (() => {}));
 
   useEffect(() => {
     if (token) sekUserStatus(token).then(setStatus);
@@ -296,10 +297,10 @@ const Dashboard: React.FC<DashboardProps> = ({ tab = 'home', setTab }) => {
 
   return (
     <div>
-      {tab === 'home' && <News />}
-      {tab === 'account' && <Account status={status} />}
-      {tab === 'votings' && <Votings status={status} token={token} />}
-      {tab === 'payment' && <Payment token={token} />}
+      {activeTab === 'home' && <News />}
+      {activeTab === 'account' && <Account status={status} />}
+      {activeTab === 'votings' && <Votings status={status} token={token} />}
+      {activeTab === 'payment' && <Payment token={token} />}
     </div>
   );
 };

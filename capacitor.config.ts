@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
     },
+	PushNotifications: {
+    presentationOptions: ["badge", "sound", "alert"]
+  },
     App: {
       // 👇 Register custom deep link scheme
       urlSchemes: ['sek2app'],
